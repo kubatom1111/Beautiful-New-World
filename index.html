@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Második Esély: Isekai Kaland - MEGA UPDATE</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&display=swap');
+
+        :root {
+            --bg-color: #0b0c10;
+            --panel-bg: rgba(31, 40, 51, 0.95);
+            --text-color: #c5c6c7;
+            --accent-color: #66fcf1;
+            --accent-dark: #45a29e;
+            --danger-color: #ff3333;
+            --gold-color: #ffd700;
+            --common: #b0b0b0;
+            --uncommon: #5cff5c;
+            --rare: #4da6ff;
+            --epic: #d666ff;
+            --legendary: #ffcc00;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Lato', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #1f2833 0%, #0b0c10 100%);
+        }
+
+        h1,
+        h2,
+        h3,
+        button {
+            font-family: 'Cinzel', serif;
+        }
+
+        /* --- LAYOUT --- */
+        #main-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 20px;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            grid-template-rows: auto 1fr auto;
+            gap: 15px;
+            height: 95vh;
+        }
+
+        @media (max-width: 800px) {
+            #main-container {
+                grid-template-columns: 1fr;
+                height: auto;
+                display: flex;
+                flex-direction: column;
+            }
+        }
+
+        /* --- PANELS --- */
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--accent-dark);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+        }
+
+        #sidebar {
+            grid-row: 1 / 4;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        #game-view {
+            grid-column: 2;
+            grid-row: 2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #header {
+            grid-column: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+        }
+
+        /* --- COMPONENTS --- */
+        .btn {
+            background: linear-gradient(to bottom, #2b3b4a, #1f2833);
+            border: 1px solid var(--accent-dark);
+            color: var(--accent-color);
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 0.9rem;
+            border-radius: 4px;
+        }
+
+        .btn:hover {
+            background: var(--accent-dark);
+            color: #fff;
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
+        .char-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid var(--accent-color);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 3px;
+        }
+
+        .bar-wrap {
+            width: 100%;
+            background: #000;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 2px;
+        }
+
+        .bar {
+            height: 100%;
+            width: 100%;
+            transition: width 0.3s;
+        }
+
+        .hp-bar {
+            background: #ff4d4d;
+        }
+
+        .mp-bar {
+            background: #4d79ff;
+        }
+
+        .xp-bar {
+            background: #ffd700;
+        }
+
+        /* --- SCENE VIEW --- */
+        #scene-img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-bottom: 2px solid var(--accent-dark);
+            border-radius: 4px 4px 0 0;
+        }
+
+        #scene-text {
+            padding: 20px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        #choices-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border-top: 1px solid var(--accent-dark);
+        }
+
+        /* --- OVERLAYS (Map, Shop, Inv) --- */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .overlay-content {
+            background: var(--panel-bg);
+            width: 90%;
+            max-width: 800px;
+            height: 80%;
+            border: 2px solid var(--accent-color);
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: red;
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 50%;
+        }
+
+        /* --- WORLD MAP --- */
+        #world-map-grid {
+            display: grid;
+            grid-template-areas:
+                ". . . dungeon ."
+                ". . forest . ."
+                "city . . . ."
+                ". . field . ."
+                ". . . . .";
+            gap: 20px;
+            height: 100%;
+            background: url('images/world_map_art.png');
+            background-size: cover;
+            filter: sepia(0.5) brightness(0.5);
+            padding: 50px;
+        }
+
+        .map-node {
+            width: 100px;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.8);
+            /* Darker, more opaque background */
+            border: 3px solid var(--accent-color);
+            /* Thicker border */
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            color: #fff;
+            font-weight: bold;
+            text-align: center;
+            font-size: 0.9rem;
+            /* Slightly larger text */
+            text-shadow: 0 2px 4px black;
+            /* Better text readability */
+            transition: all 0.2s;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+            /* Stronger shadow */
+            z-index: 10;
+        }
+
+        .map-node:hover {
+            transform: scale(1.1);
+            background: var(--accent-color);
+            color: #000;
+            text-shadow: none;
+            z-index: 15;
+            box-shadow: 0 0 20px var(--accent-color);
+        }
+
+        .map-node.locked {
+            filter: grayscale(1);
+            opacity: 0.6;
+            pointer-events: none;
+            border-color: #555;
+            background: rgba(50, 50, 50, 0.8);
+        }
+
+        .map-node.current-loc {
+            border-color: var(--gold-color);
+            box-shadow: 0 0 30px var(--gold-color), inset 0 0 20px var(--gold-color);
+            /* Outer and Inner glow */
+            transform: scale(1.15);
+            background: rgba(255, 215, 0, 0.3);
+            /* Slightly more visible background tint */
+            color: var(--gold-color);
+            z-index: 20;
+            animation: pulseLocation 2s infinite;
+        }
+
+        @keyframes pulseLocation {
+            0% {
+                box-shadow: 0 0 20px var(--gold-color);
+            }
+
+            50% {
+                box-shadow: 0 0 40px var(--gold-color), 0 0 10px white;
+            }
+
+            100% {
+                box-shadow: 0 0 20px var(--gold-color);
+            }
+        }
+
+        /* --- PREMIUM INVENTORY --- */
+        #inventory-hud {
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--gold-color);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            border-radius: 8px;
+        }
+
+        .inv-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 5px 15px;
+            font-family: 'Cinzel', serif;
+            transition: color 0.3s;
+        }
+
+        .tab-btn.active {
+            color: var(--gold-color);
+            border-bottom: 2px solid var(--gold-color);
+            text-shadow: 0 0 10px var(--gold-color);
+        }
+
+        .tab-btn:hover {
+            color: white;
+        }
+
+        /* Item Cards */
+        .inv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            /* Slightly wider */
+            grid-auto-rows: max-content;
+            /* Don't stretch rows */
+            gap: 15px;
+            height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+            align-content: start;
+            /* Pack items at the top */
+        }
+
+        .inv-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            aspect-ratio: 1 / 1.1;
+            /* Keep nice proportion */
+        }
+
+        .inv-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .inv-card-icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+        }
+
+        .inv-card-name {
+            font-size: 0.75rem;
+            text-align: center;
+            line-height: 1.2;
+            color: #ddd;
+        }
+
+        .inv-card-count {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #222;
+            border: 1px solid #555;
+            color: var(--gold-color);
+            font-size: 0.7rem;
+            padding: 0 4px;
+            border-radius: 4px;
+        }
+
+        /* Rarity Glows */
+        .rarity-common {
+            border-color: #777;
+        }
+
+        .rarity-uncommon {
+            border-color: #4caf50;
+            box-shadow: inset 0 0 10px rgba(76, 175, 80, 0.2);
+        }
+
+        .inv-card.rarity-uncommon:hover {
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .rarity-rare {
+            border-color: #2196f3;
+            box-shadow: inset 0 0 10px rgba(33, 150, 243, 0.2);
+        }
+
+        .inv-card.rarity-rare:hover {
+            box-shadow: 0 0 15px rgba(33, 150, 243, 0.4);
+        }
+
+        .rarity-epic {
+            border-color: #9c27b0;
+            box-shadow: inset 0 0 10px rgba(156, 39, 176, 0.2);
+        }
+
+        .inv-card.rarity-epic:hover {
+            box-shadow: 0 0 15px rgba(156, 39, 176, 0.4);
+        }
+
+        /* Equipment Layout */
+        .equip-layout {
+            display: flex;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .equip-stats {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .equip-slots {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .equip-slot-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+
+        .equip-slot-icon {
+            width: 50px;
+            height: 50px;
+            background: #111;
+            border: 1px solid #444;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+        }
+
+        .equip-slot-info {
+            flex: 1;
+        }
+
+        .equip-label {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .equip-name {
+            font-size: 1rem;
+            color: white;
+            font-weight: bold;
+        }
+
+        .equip-btn {
+            padding: 5px 10px;
+            background: #333;
+            border: 1px solid #555;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .equip-btn:hover {
+            background: #444;
+            color: white;
+        }
+
+        /* Crafting Cards */
+        .craft-card {
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.6), rgba(50, 50, 50, 0.3));
+            border: 1px solid #444;
+            border-left: 3px solid var(--gold-color);
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .craft-card:hover {
+            background: linear-gradient(90deg, rgba(20, 20, 20, 0.8), rgba(70, 70, 70, 0.4));
+        }
+
+        .craft-res {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .craft-cost {
+            color: var(--gold-color);
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .craft-reqs {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-top: 3px;
+        }
+
+        /* --- NOTIFICATIONS --- */
+        #notification-area {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 2000;
+        }
+
+        .notif-toast {
+            background: rgba(0, 0, 0, 0.9);
+            border-left: 4px solid var(--accent-color);
+            padding: 15px 20px;
+            color: white;
+            border-radius: 4px;
+            animation: fadeIn 0.3s, fadeOut 0.3s 2.7s forwards;
+            min-width: 250px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+
+        /* --- INVENTORY GRID --- */
+        .inv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+            overflow-y: auto;
+        }
+
+        .inv-slot {
+            width: 70px;
+            height: 70px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #555;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.7rem;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            transition: border-color 0.2s;
+        }
+
+        .inv-slot:hover {
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .inv-count {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            color: yellow;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 0 #000;
+        }
+
+        .inv-icon {
+            font-size: 1.5rem;
+            margin-bottom: 2px;
+        }
+
+        .rarity-common {
+            color: var(--common);
+            border-color: var(--common);
+        }
+
+        .rarity-uncommon {
+            color: var(--uncommon);
+            border-color: var(--uncommon);
+        }
+
+        .rarity-rare {
+            color: var(--rare);
+            border-color: var(--rare);
+        }
+
+        .rarity-epic {
+            color: var(--epic);
+            border-color: var(--epic);
+        }
+
+        /* --- TABS --- */
+        .tab-nav {
+            display: flex;
+            gap: 10px;
+            border-bottom: 2px solid #555;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .tab-btn.active {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NOTIFICATION AREA -->
+    <div id="notification-area"></div>
+
+    <!-- START SCREEN OVERLAY -->
+    <div id="start-screen"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+        <h1 style="color:var(--accent-color); font-size:3rem; margin-bottom:10px;">MÁSODIK ESÉLY</h1>
+        <h2 style="color:#fff;">Isekai Kaland - Kibővített Kiadás</h2>
+        <div style="margin:20px; text-align:center;">
+            <p>Add meg a hős nevét:</p>
+            <input type="text" id="hero-name-input" placeholder="Kael"
+                style="padding:10px; font-size:1.2rem; text-align:center; background:#222; color:white; border:1px solid #555;">
+        </div>
+        <button class="btn" onclick="startGame()" style="font-size:1.5rem; padding:15px 40px;">KALAND INDÍTÁSA</button>
+    </div>
+
+    <div id="main-container">
+        <!-- HEADER -->
+        <header id="header" class="panel">
+            <h2 id="location-name">Ismeretlen Hely</h2>
+            <div style="display:flex; gap:10px;">
+                <span id="gold-display" style="color:var(--gold-color); font-weight:bold;">0 G</span>
+                <button class="btn" onclick="toggleOverlay('map')">TÉRKEP</button>
+                <button class="btn" onclick="toggleOverlay('inventory')">TÁSKA</button>
+                <button class="btn" onclick="toggleOverlay('quest')">KÜLDETÉSEK</button>
+            </div>
+        </header>
+
+        <!-- SIDEBAR (PARTY) -->
+        <aside id="sidebar" class="panel">
+            <h3 style="text-align:center; border-bottom:1px solid #555; padding-bottom:5px;">CSAPAT</h3>
+            <div id="party-list">
+                <!-- JS Populates this -->
+            </div>
+        </aside>
+
+        <!-- GAME VIEW -->
+        <main id="game-view" class="panel" style="padding:0; overflow:hidden;">
+            <div style="position:relative;">
+                <img id="scene-img" src="images/betrayal.png" alt="Scene">
+                <div id="combat-hud" style="position:absolute; bottom:10px; left:10px; right:10px; display:none;">
+                    <!-- Enemy Stats -->
+                    <div style="background:rgba(0,0,0,0.8); padding:10px; border:1px solid red; color:white;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <strong id="enemy-name">ELLENSÉG</strong>
+                            <span id="enemy-hp-text">100/100</span>
+                        </div>
+                        <div class="bar-wrap">
+                            <div id="enemy-hp-bar" class="bar hp-bar" style="width:100%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="scene-text">
+                Betöltés...
+            </div>
+            <div id="choices-area">
+                <!-- Choices generated here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- OVERLAYS -->
+
+    <!-- MAP OVERLAY -->
+    <div id="overlay-map" class="overlay">
+        <div class="overlay-content" style="background:#111;">
+            <button class="close-btn" onclick="toggleOverlay('map')">X</button>
+            <h2 style="text-align:center; color:var(--accent-color);">VILÁGTÉRKÉP (Aethelgard)</h2>
+            <div id="world-map-grid">
+                <div class="map-node" style="grid-area: city;" onclick="travelTo('city')">Aethelgard<br>(Város)</div>
+                <div class="map-node" style="grid-area: forest;" onclick="travelTo('forest')">Suttogó<br>Erdő</div>
+                <div class="map-node" style="grid-area: dungeon;" onclick="travelTo('dungeon')">Kristály<br>Barlang
+                </div>
+                <div class="map-node" style="grid-area: field;" onclick="travelTo('field')">Arany<br>Mezők</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INVENTORY OVERLAY -->
+    <div id="overlay-inventory" class="overlay">
+        <div class="overlay-content">
+            <button class="close-btn" onclick="toggleOverlay('inventory')">X</button>
+            <div class="tab-nav">
+                <button class="tab-btn active" onclick="switchInvTab('items')">Tárgyak</button>
+                <button class="tab-btn" onclick="switchInvTab('equip')">Felszerelés</button>
+                <button class="tab-btn" onclick="switchInvTab('craft')">Barkácsolás</button>
+            </div>
+
+            <div id="inv-tab-items" class="inv-tab">
+                <h3>Hátizsák</h3>
+                <div id="inventory-grid" class="inv-grid"></div>
+            </div>
+
+            <div id="inv-tab-equip" class="inv-tab" style="display:none;">
+                <h3>Aktív Felszerelés (Hős)</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>Jobb Kéz: <button class="btn" id="slot-mainhand" onclick="unequip('mainhand')">Üres</button>
+                    </div>
+                    <div>Bal Kéz: <button class="btn" id="slot-offhand" onclick="unequip('offhand')">Üres</button></div>
+                    <div>Páncél: <button class="btn" id="slot-armor" onclick="unequip('armor')">Üres</button></div>
+                    <div>Ékszer: <button class="btn" id="slot-acc" onclick="unequip('acc')">Üres</button></div>
+                </div>
+            </div>
+
+            <div id="inv-tab-craft" class="inv-tab" style="display:none;">
+                <h3>Kovácsderék</h3>
+                <div id="crafting-list">
+                    <!-- Recipes -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUEST OVERLAY -->
+    <div id="overlay-quest" class="overlay">
+        <div class="overlay-content">
+            <button class="close-btn" onclick="toggleOverlay('quest')">X</button>
+            <h2>Küldetés Napló</h2>
+            <div id="quest-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA & CONFIG ---
+        const ITEMS = {
+            'potion': { name: "Gyógyital", icon: "🧪", type: 'consumable', effect: 'heal', val: 50, price: 20, rarity: 'common' },
+            'mana_potion': { name: "Mana Ital", icon: "💧", type: 'consumable', effect: 'mana', val: 30, price: 25, rarity: 'common' },
+            'sword_rusted': { name: "Rozsdás Kard", icon: "🗡️", type: 'weapon', slot: 'mainhand', atk: 5, price: 10, rarity: 'common' },
+            'sword_iron': { name: "Vaskard", icon: "⚔️", type: 'weapon', slot: 'mainhand', atk: 12, price: 100, rarity: 'uncommon' },
+            'staff_wood': { name: "Fa Bot", icon: "🪵", type: 'weapon', slot: 'mainhand', atk: 3, matk: 8, price: 50, rarity: 'common' },
+            'leather_armor': { name: "Bőrpáncél", icon: "🛡️", type: 'armor', slot: 'armor', def: 5, price: 80, rarity: 'common' },
+            'wolf_pelt': { name: "Farkasbőr", icon: "🧶", type: 'material', price: 15, rarity: 'common' },
+            'crystal_shard': { name: "Kristály", icon: "💎", type: 'material', price: 50, rarity: 'rare' }
+        };
+
+        const RECIPES = [
+            { result: 'leather_armor', req: { 'wolf_pelt': 3 }, cost: 50 }
+        ];
+
+        const ENEMIES = {
+            'slime': { name: "Nyálkaszörny", hp: 40, maxHp: 40, atk: 5, xp: 15, loot: null },
+            'wolf': { name: "Árnyfarkas", hp: 80, maxHp: 80, atk: 10, xp: 35, loot: 'wolf_pelt' },
+            'bandit': { name: "Bandita", hp: 120, maxHp: 120, atk: 15, xp: 60, loot: 'potion' },
+            'golem': { name: "Kristály Gólem", hp: 400, maxHp: 400, atk: 30, xp: 500, loot: 'crystal_shard' }
+        };
+
+        const QUESTS = {
+            'golem': { title: "Gólem Vadász", desc: "Győzd le a Kristály Gólemet a barlang mélyén!", reward: "Dicsőség" }
+        };
+
+        // --- STATE ---
+        let game = {
+            heroName: "Kael",
+            gold: 100,
+            location: 'forest', // city, forest, dungeon
+            inventory: [], // Array of item IDs
+            equipment: { mainhand: null, offhand: null, armor: null, acc: null },
+            party: [
+                { name: "Hős", class: 'warrior', lvl: 1, hp: 100, maxHp: 100, mp: 20, maxMp: 20, xp: 0, nextXp: 100, stats: { str: 10, int: 5 } }
+            ],
+            quests: [], // Array of QUEST IDs
+            flags: { tutorialDone: false, guildJoined: false },
+            unlockedLocs: ['forest']
+        };
+
+        let combat = null;
+
+        // --- GUI FUNCTIONS ---
+
+        function showNotification(msg) {
+            const area = document.getElementById('notification-area');
+            const notif = document.createElement('div');
+            notif.className = 'notif-toast';
+            notif.innerHTML = msg;
+            area.appendChild(notif);
+
+            // Auto remove handled by CSS animation, but cleanup DOM
+            setTimeout(() => {
+                if (notif.parentNode) notif.parentNode.removeChild(notif);
+            }, 3000);
+        }
+
+        // --- CORE FUNCTIONS ---
+
+        function startGame() {
+            const nameInput = document.getElementById('hero-name-input').value;
+            if (nameInput) game.heroName = nameInput;
+            game.party[0].name = game.heroName;
+
+            document.getElementById('start-screen').style.display = 'none';
+
+            // Give starting items
+            addItem('potion', 2);
+            addItem('sword_rusted');
+
+            renderParty();
+            renderHuds();
+
+            // Start Story
+            loadScene('prologue_1');
+        }
+
+        function loadScene(sceneId) {
+            const scene = SCENES[sceneId];
+            if (!scene) return console.error("Missing scene: " + sceneId);
+
+            document.getElementById('scene-img').src = scene.img;
+            document.getElementById('scene-text').innerHTML = scene.text;
+            document.getElementById('location-name').innerText = scene.locName || "Ismeretlen";
+            document.getElementById('combat-hud').style.display = 'none'; // Ensure combat HUD is hidden
+
+            const choicesDiv = document.getElementById('choices-area');
+            choicesDiv.innerHTML = '';
+
+            scene.choices.forEach(c => {
+                if (c.cond && !c.cond()) return;
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.innerText = c.text;
+                btn.onclick = () => {
+                    if (c.action) c.action();
+                    if (c.next) loadScene(c.next);
+                };
+                choicesDiv.appendChild(btn);
+            });
+        }
+
+        // --- RPG SYSTEM ---
+
+        function addItem(id, qty = 1) {
+            for (let i = 0; i < qty; i++) game.inventory.push(id);
+            renderHuds();
+            if (qty === 1) showNotification(`Tárgy szerzése: ${ITEMS[id].name}`);
+        }
+
+        function removeItem(id) {
+            const idx = game.inventory.indexOf(id);
+            if (idx > -1) game.inventory.splice(idx, 1);
+            renderHuds();
+        }
+
+        function countItem(id) {
+            return game.inventory.filter(i => i === id).length;
+        }
+
+        function equip(itemId) {
+            const item = ITEMS[itemId];
+            if (!item.slot) return;
+
+            // Unequip current if exists
+            if (game.equipment[item.slot]) {
+                addItem(game.equipment[item.slot]);
+            }
+
+            game.equipment[item.slot] = itemId;
+            removeItem(itemId);
+            renderHuds();
+            showNotification(`Felszerelve: ${item.name}`);
+        }
+
+        function unequip(slot) {
+            if (game.equipment[slot]) {
+                const name = ITEMS[game.equipment[slot]].name;
+                addItem(game.equipment[slot]);
+                game.equipment[slot] = null;
+                renderHuds();
+                showNotification(`Levéve: ${name}`);
+            }
+        }
+
+        function craft(recipeIdx) {
+            const recipe = RECIPES[recipeIdx];
+            if (game.gold < recipe.cost) return showNotification("Nincs elég pénzed!");
+
+            for (let mat in recipe.req) {
+                if (countItem(mat) < recipe.req[mat]) return showNotification("Nincs elég alapanyag!");
+            }
+
+            // Consume
+            game.gold -= recipe.cost;
+            for (let mat in recipe.req) {
+                for (let k = 0; k < recipe.req[mat]; k++) removeItem(mat);
+            }
+
+            addItem(recipe.result);
+            showNotification(`Sikeresen elkészült: ${ITEMS[recipe.result].name}`);
+            renderHuds();
+        }
+
+        // --- COMBAT SYSTEM 2.0 ---
+
+        function startCombat(enemyId, winScene) {
+            const template = ENEMIES[enemyId];
+            combat = {
+                enemy: { ...template },
+                winScene: winScene,
+                turn: 0, // 0 = Player 1, 1 = Player 2..., X = Enemy
+                logs: []
+            };
+
+            document.getElementById('combat-hud').style.display = 'block';
+            updateCombatView();
+        }
+
+        function updateCombatView() {
+            if (!combat) return;
+
+            // Update Enemy UI
+            const hpPct = Math.max(0, (combat.enemy.hp / combat.enemy.maxHp) * 100);
+            document.getElementById('enemy-hp-bar').style.width = hpPct + "%";
+            document.getElementById('enemy-hp-text').innerText = `${combat.enemy.hp}/${combat.enemy.maxHp}`;
+            document.getElementById('enemy-name').innerText = combat.enemy.name;
+
+            // Determine whose turn
+            if (combat.turn < game.party.length) {
+                // Player Character Turn
+                const char = game.party[combat.turn];
+                if (char.hp <= 0) {
+                    nextTurn(); // Skip dead characters
+                    return;
+                }
+                document.getElementById('scene-text').innerHTML = `<b>${char.name}</b> következik! Mit teszel?`;
+
+                const choicesDiv = document.getElementById('choices-area');
+                choicesDiv.innerHTML = '';
+
+                // Attack
+                createChoiceBtn("Támadás", () => playerAttack(char));
+
+                // Skills
+                if (char.class === 'mage') {
+                    createChoiceBtn("Tűzgolyó (10 MP)", () => playerSkill(char, 'fireball'));
+                }
+
+                // Item
+                createChoiceBtn("Gyógyital", () => useCombatItem(char, 'potion'));
+
+            } else {
+                // Enemy Turn
+                enemyTurn();
+            }
+        }
+
+        function createChoiceBtn(txt, func) {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.innerText = txt;
+            btn.onclick = func;
+            document.getElementById('choices-area').appendChild(btn);
+        }
+
+        function useCombatItem(char, itemId) {
+            if (countItem(itemId) > 0) {
+                // Simple impl
+                if (itemId === 'potion') {
+                    char.hp = Math.min(char.hp + 50, char.maxHp);
+                    removeItem(itemId);
+                    renderParty();
+                    showNotification("Gyógyital használva!");
+                    nextTurn();
+                }
+            } else {
+                showNotification("Nincs ilyen tárgyad!");
+            }
+        }
+
+        function playerAttack(char) {
+            // Calc Dmg (Base + Weapon)
+            let dmg = char.stats.str;
+            if (game.equipment.mainhand) dmg += ITEMS[game.equipment.mainhand].atk;
+
+            // Critical variance
+            dmg = Math.floor(dmg * (0.8 + Math.random() * 0.4));
+
+            dealDamage(dmg);
+            nextTurn();
+        }
+
+        function playerSkill(char, skillId) {
+            if (skillId === 'fireball') {
+                if (char.mp < 10) return showNotification("Nincs elég Mana!");
+                char.mp -= 10;
+                renderParty();
+                dealDamage(char.stats.int * 3);
+                nextTurn();
+            }
+        }
+
+        function dealDamage(amount) {
+            combat.enemy.hp -= amount;
+            showNotification(`Sebzés: ${amount}`);
+            if (combat.enemy.hp <= 0) winCombat();
+        }
+
+        function nextTurn() {
+            if (!combat) return;
+            combat.turn++;
+            updateCombatView();
+        }
+
+        function enemyTurn() {
+            document.getElementById('choices-area').innerHTML = '';
+            document.getElementById('scene-text').innerText = `A ${combat.enemy.name} támad!`;
+
+            setTimeout(() => {
+                if (!combat) return;
+
+                // Simple AI: Hit random living party member
+                const living = game.party.filter(p => p.hp > 0);
+                if (living.length === 0) return checkDefeat();
+
+                const target = living[Math.floor(Math.random() * living.length)];
+
+                let dmg = combat.enemy.atk;
+                // Armor mitigate
+                if (game.equipment.armor && game.party.indexOf(target) === 0) dmg -= ITEMS[game.equipment.armor].def; // Only hero has armor slot for now
+                if (dmg < 1) dmg = 1;
+
+                target.hp -= dmg;
+                showNotification(`${target.name} sérült: -${dmg} HP`);
+
+                renderParty(); // Update HP bars
+
+                if (checkDefeat()) {
+                    alert("Mindenki meghalt! Játék vége."); // Alert okay for Game Over
+                    location.reload();
+                } else {
+                    combat.turn = 0; // Loop back to player 1
+                    updateCombatView();
+                }
+            }, 1000);
+        }
+
+        function checkDefeat() {
+            return game.party.every(p => p.hp <= 0);
+        }
+
+        function winCombat() {
+            showNotification(`GYŐZELEM! +${combat.enemy.xp} XP`);
+            // Loot
+            if (combat.enemy.loot) addItem(combat.enemy.loot);
+
+            // Grant XP
+            game.party.forEach(p => {
+                if (p.hp > 0) {
+                    p.xp += combat.enemy.xp;
+                    if (p.xp >= p.nextXp) levelUp(p);
+                }
+            });
+
+            document.getElementById('combat-hud').style.display = 'none';
+            const next = combat.winScene;
+            combat = null;
+            renderParty();
+            loadScene(next);
+        }
+
+        function levelUp(char) {
+            char.lvl++;
+            char.xp = 0;
+            char.nextXp *= 1.5;
+            char.maxHp += 20; char.hp = char.maxHp;
+            char.stats.str += 2;
+            showNotification(`${char.name} SZINTET LÉPETT!`);
+        }
+
+        // --- UI & RENDER ---
+
+        function renderParty() {
+            const list = document.getElementById('party-list');
+            list.innerHTML = '';
+            game.party.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'char-card';
+                card.innerHTML = `
+                    <div style="font-weight:bold; color:var(--accent-color); margin-bottom:5px;">${p.name} (Lv.${p.lvl})</div>
+                    <div class="stat-row"><span>HP</span> <span>${p.hp}/${p.maxHp}</span></div>
+                    <div class="bar-wrap"><div class="bar hp-bar" style="width:${Math.max(0, (p.hp / p.maxHp) * 100)}%"></div></div>
+                    <div class="stat-row" style="margin-top:5px;"><span>MP</span> <span>${p.mp}/${p.maxMp}</span></div>
+                    <div class="bar-wrap"><div class="bar mp-bar" style="width:${Math.max(0, (p.mp / p.maxMp) * 100)}%"></div></div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function renderHuds() {
+            document.getElementById('gold-display').innerText = `${game.gold} G`;
+
+            // --- INVENTORY TAB ---
+            const grid = document.getElementById('inventory-grid');
+            grid.innerHTML = '';
+            const uniqueItems = [...new Set(game.inventory)];
+            uniqueItems.forEach(id => {
+                const item = ITEMS[id];
+                const count = countItem(id);
+                // New Card HTML
+                const card = document.createElement('div');
+                card.className = `inv-card rarity-${item.rarity}`;
+                card.innerHTML = `
+                   <div class="inv-card-count">${count}</div>
+                   <div class="inv-card-icon">${item.icon || '❔'}</div>
+                   <div class="inv-card-name">${item.name}</div>
+               `;
+                card.onclick = () => {
+                    if (item.type === 'weapon' || item.type === 'armor') equip(id);
+                    else if (item.type === 'consumable') {
+                        useCombatItem(game.party[0], id);
+                    }
+                };
+                grid.appendChild(card);
+            });
+
+            // --- EQUIPMENT TAB (New Layout) ---
+            const equipTab = document.getElementById('inv-tab-equip');
+            // We need to inject the layout structure if it doesn't exist or just rebuild it.
+            // Let's rebuild for simplicity.
+            const hero = game.party[0];
+            const mainhand = game.equipment.mainhand ? ITEMS[game.equipment.mainhand] : null;
+            const armor = game.equipment.armor ? ITEMS[game.equipment.armor] : null;
+
+            equipTab.innerHTML = `
+                <div class="equip-layout">
+                    <div class="equip-stats">
+                        <h3 style="color:var(--gold-color); border-bottom:1px solid #555; padding-bottom:5px;">Statisztikák</h3>
+                        <p>Erő (STR): <b style="color:#f44336">${hero.stats.str}</b></p>
+                        <p>Intelligencia (INT): <b style="color:#2196f3">${hero.stats.int}</b></p>
+                        <p>Támadás: <b>${hero.stats.str + (mainhand ? mainhand.atk : 0)}</b></p>
+                        <p>Védelem: <b>${armor ? armor.def : 0}</b></p>
+                        <div style="margin-top:20px; font-size:0.8rem; color:#888;">
+                            Viselj jobb felszerelést a statisztikák növeléséhez.
+                        </div>
+                    </div>
+                    <div class="equip-slots">
+                        ${renderEquipSlot('Fegyver (Jobb Kéz)', 'mainhand', mainhand, '⚔️')}
+                        ${renderEquipSlot('Páncélzat', 'armor', armor, '🛡️')}
+                    </div>
+                </div>
+            `;
+
+            // --- CRAFTING TAB (Recipe Cards) ---
+            const craftList = document.getElementById('crafting-list');
+            craftList.innerHTML = '';
+            RECIPES.forEach((rec, idx) => {
+                const resItem = ITEMS[rec.result];
+                // Build requirement string
+                let reqStr = "";
+                for (let mat in rec.req) {
+                    reqStr += `${ITEMS[mat].icon} ${ITEMS[mat].name} x${rec.req[mat]}  `;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'craft-card';
+                card.innerHTML = `
+                    <div class="craft-res">
+                        <div style="font-size:2rem;">${resItem.icon}</div>
+                        <div>
+                            <div style="font-weight:bold; color:white;">${resItem.name}</div>
+                            <div class="craft-reqs">Kell: ${reqStr}</div>
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="craft-cost">${rec.cost} G</div>
+                        <button class="btn" style="padding:5px 15px; font-size:0.8rem;" onclick="craft(${idx})">Barkácsolás</button>
+                    </div>
+                `;
+                craftList.appendChild(card);
+            });
+
+            // Quest Log & Map styling updates (preserved)
+            refreshMapNodes();
+            refreshQuestLog();
+        }
+
+        function renderEquipSlot(label, slotKey, item, placeholderIcon) {
+            if (item) {
+                // Item Equipped
+                return `
+                <div class="equip-slot-row">
+                    <div class="equip-slot-icon rarity-${item.rarity}" style="border-color:${getRarityColor(item.rarity)}">${item.icon}</div>
+                    <div class="equip-slot-info">
+                        <div class="equip-label">${label}</div>
+                        <div class="equip-name" style="color:${getRarityColor(item.rarity)}">${item.name}</div>
+                    </div>
+                    <button class="equip-btn" onclick="unequip('${slotKey}')">Levétel</button>
+                </div>`;
+            } else {
+                // Empty
+                return `
+                <div class="equip-slot-row">
+                    <div class="equip-slot-icon" style="opacity:0.3">${placeholderIcon}</div>
+                    <div class="equip-slot-info">
+                        <div class="equip-label">${label}</div>
+                        <div class="equip-name" style="color:#555;">Üres</div>
+                    </div>
+                </div>`;
+            }
+        }
+
+        function getRarityColor(rarity) {
+            if (rarity === 'common') return '#ccc';
+            if (rarity === 'uncommon') return '#4caf50';
+            if (rarity === 'rare') return '#2196f3';
+            if (rarity === 'epic') return '#9c27b0';
+            return '#fff';
+        }
+
+        function refreshMapNodes() {
+            document.querySelectorAll('.map-node').forEach(node => node.classList.remove('current-loc'));
+            if (game.location) {
+                const mapNode = document.querySelector(`.map-node[onclick*="'${game.location}'"]`);
+                if (mapNode) mapNode.classList.add('current-loc');
+            }
+        }
+
+        function refreshQuestLog() {
+            const questList = document.getElementById('quest-list');
+            if (questList) {
+                questList.innerHTML = '';
+                if (game.quests.length === 0) {
+                    questList.innerHTML = '<p style="color:#777; font-style:italic;">Nincs aktív küldetés.</p>';
+                } else {
+                    game.quests.forEach(qId => {
+                        const q = QUESTS[qId];
+                        if (q) {
+                            const qDiv = document.createElement('div');
+                            qDiv.style.border = '1px solid #555';
+                            qDiv.style.padding = '10px';
+                            qDiv.style.marginBottom = '10px';
+                            qDiv.innerHTML = `<h4 style="margin:0; color:gold;">${q.title}</h4><p style="margin:5px 0; font-size:0.9rem;">${q.desc}</p>`;
+                            questList.appendChild(qDiv);
+                        }
+                    });
+                }
+            }
+        }
+
+        function toggleOverlay(id) {
+            const el = document.getElementById('overlay-' + id);
+            el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
+            if (el.style.display === 'flex') renderHuds();
+        }
+
+        function switchInvTab(tab) {
+            document.querySelectorAll('.inv-tab').forEach(t => t.style.display = 'none');
+            document.getElementById('inv-tab-' + tab).style.display = 'block';
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function travelTo(loc) {
+            if (!game.unlockedLocs.includes(loc) && loc !== 'city') {
+                return showNotification("Ez a helyszín még nem elérhető!");
+            }
+            game.location = loc; // Update tracking
+            toggleOverlay('map');
+            if (loc === 'city') loadScene('city_gates');
+            if (loc === 'forest') loadScene('forest_main');
+            if (loc === 'dungeon') loadScene('dungeon_entry');
+            if (loc === 'field') loadScene('forest_main'); // Placeholder
+
+            showNotification(`Megérkeztél: ${loc.toUpperCase()}`);
+        }
+
+        // --- SCENE DATABASE ---
+        const SCENES = {
+            prologue_1: {
+                img: 'images/betrayal.png',
+                text: "Szakad az eső. Egy árnyék lép ki mögüled. Éles fájdalom a hátadban... minden elsötétül.",
+                choices: [{ text: "Tovább...", next: 'prologue_2' }]
+            },
+            prologue_2: {
+                img: 'images/goddess.png',
+                text: "Egy Istennő áll előtted. 'Kapsz egy második esélyt, halandó.'",
+                choices: [{ text: "Ébredek!", next: 'forest_main' }]
+            },
+            forest_main: {
+                img: 'images/forest.png',
+                locName: "Suttogó Erdő",
+                text: "Az erdő mélyén vagy. Madarak csicseregnek, de veszélyt érzel.",
+                choices: [
+                    { text: "Körülnézek (Harc)", action: () => startCombat('slime', 'forest_main') },
+                    { text: "Irány a Város!", next: 'city_gates', action: () => { if (!game.unlockedLocs.includes('city')) game.unlockedLocs.push('city'); } }
+                ]
+            },
+            city_gates: {
+                img: 'images/city.png',
+                locName: "Aethelgard",
+                text: "A dicsőséges város. Piacok, Guild, Kovács... minden itt van.",
+                choices: [
+                    { text: "Kalandorok Céhe", next: 'guild' },
+                    { text: "Piactér (Bolt)", next: 'shop' }
+                ]
+            },
+            guild: {
+                img: 'images/guild.png',
+                locName: "Kalandorok Céhe",
+                text: "A Guild Mester rád néz. 'Van itt egy papnő, Elara, aki társat keres.'",
+                choices: [
+                    {
+                        text: "Elara felvétele a csapatba", cond: () => game.party.length === 1, action: () => {
+                            game.party.push({ name: "Elara", class: 'mage', lvl: 1, hp: 80, maxHp: 80, mp: 100, maxMp: 100, xp: 0, nextXp: 100, stats: { str: 3, int: 15 } });
+                            showNotification("Elara csatlakozott!");
+                            renderParty();
+                        }
+                    },
+                    {
+                        text: "Küldetés felvétele: Gólem Vadász", cond: () => !game.quests.includes('golem'), action: () => {
+                            game.quests.push('golem');
+                            game.unlockedLocs.push('dungeon');
+                            showNotification("Új küldetés: [Gólem Vadász]");
+                            renderHuds(); // Update quest log
+                        }
+                    },
+                    { text: "Vissza a városba", next: 'city_gates' }
+                ]
+            },
+            shop: {
+                img: 'images/shop_interior.png',
+                locName: "Vegyesbolt",
+                text: "A kereskedő mosolyog. 'Vegyél valamit!'",
+                choices: [
+                    { text: "Vaskard vásárlása (100g)", action: () => { if (game.gold >= 100) { game.gold -= 100; addItem('sword_iron'); } else showNotification("Nincs pénz!"); } },
+                    { text: "Gyógyital (20g)", action: () => { if (game.gold >= 20) { game.gold -= 20; addItem('potion'); } else showNotification("Nincs pénz!"); } },
+                    { text: "Vissza", next: 'city_gates' }
+                ]
+            },
+            dungeon_entry: {
+                img: 'images/dungeon_cave.png',
+                locName: "Kristály Barlang",
+                text: "A barlang sötét. Mélyéről morgás hallatszik.",
+                choices: [
+                    { text: "Bemegyek", next: 'dungeon_deep' },
+                    { text: "Világtérkép", action: () => toggleOverlay('map') }
+                ]
+            },
+            dungeon_deep: {
+                img: 'images/boss_golem.png',
+                text: "Egy hatalmas Kristály Gólem állja utad! Ez a főellenség!",
+                choices: [
+                    { text: "HARC A BOSS ELLEN!", action: () => startCombat('golem', 'win_game') }
+                ]
+            },
+            win_game: {
+                img: 'images/city.png',
+                text: "LEGYŐZTED A GÓLEMET! Aethelgard hőse vagy! Vége a jelenlegi tartalomnak.",
+                choices: [{ text: "Újrakezdés", action: () => location.reload() }]
+            }
+        };
+
+        // Initialize audio context placeholder
+        function playSound(type) {
+            // Placeholder for sound effects
+            // console.log("Playing sound:", type);
+        }
+
+    </script>
+</body>
+
+</html>
