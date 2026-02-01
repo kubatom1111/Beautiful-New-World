@@ -79,8 +79,10 @@
             #sidebar {
                 grid-row: auto;
                 /* Reset grid row */
-                order: 3;
-                /* Move to bottom */
+                order: 0;
+                /* Reset order to appear below header (DOM order) */
+                margin-bottom: 15px;
+                /* Spacing before game view */
             }
 
             /* Map Overlay fixes */
