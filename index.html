@@ -727,6 +727,38 @@
             color: var(--accent-color);
             font-weight: bold;
         }
+
+        @media (max-width: 600px) {
+            #header {
+                flex-direction: column;
+                gap: 5px;
+                padding: 10px;
+            }
+
+            #header h2 {
+                font-size: 1rem;
+                margin-bottom: 5px;
+            }
+
+            .header-controls {
+                width: 100%;
+                justify-content: space-between;
+                gap: 5px !important;
+            }
+
+            .header-btn {
+                padding: 8px 12px;
+                font-size: 1.2rem;
+                flex: 1;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .btn-text {
+                display: none;
+            }
+        }
     </style>
 </head>
 
@@ -765,13 +797,17 @@
 
     <div id="main-container">
         <!-- HEADER -->
-        <header id="header" class="panel">
-            <h2 id="location-name">Ismeretlen Hely</h2>
-            <div style="display:flex; gap:10px;">
-                <span id="gold-display" style="color:var(--gold-color); font-weight:bold;">0 G</span>
-                <button class="btn" onclick="toggleOverlay('map')">TÉRKEP</button>
-                <button class="btn" onclick="toggleOverlay('inventory')">TÁSKA</button>
-                <button class="btn" onclick="toggleOverlay('quest')">KÜLDETÉSEK</button>
+        <header id="header" class="panel"
+            style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+            <h2 id="location-name" style="margin:0;">Ismeretlen Hely</h2>
+            <div class="header-controls" style="display:flex; gap:10px; align-items:center;">
+                <span id="gold-display" style="color:var(--gold-color); font-weight:bold; margin-right:5px;">0 G</span>
+                <button class="btn header-btn" onclick="toggleOverlay('map')">🗺️ <span
+                        class="btn-text">TÉRKEP</span></button>
+                <button class="btn header-btn" onclick="toggleOverlay('inventory')">🎒 <span
+                        class="btn-text">TÁSKA</span></button>
+                <button class="btn header-btn" onclick="toggleOverlay('quest')">📜 <span
+                        class="btn-text">KÜLDETÉSEK</span></button>
             </div>
         </header>
 
