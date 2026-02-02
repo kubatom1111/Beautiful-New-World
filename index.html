@@ -888,16 +888,18 @@
         ];
 
         const ENEMIES = {
-            'slime': { name: "Nyálkaszörny", hp: 40, maxHp: 40, atk: 5, xp: 15, loot: null },
-            'wolf': { name: "Árnyfarkas", hp: 80, maxHp: 80, atk: 10, xp: 35, loot: 'wolf_pelt' },
-            'bandit': { name: "Bandita", hp: 120, maxHp: 120, atk: 15, xp: 60, loot: 'potion' },
-            'golem': { name: "Kristály Gólem", hp: 400, maxHp: 400, atk: 30, xp: 500, loot: 'crystal_shard' }
+            'slime': { name: "Nyálkaszörny", hp: 40, maxHp: 40, atk: 5, xp: 15, gold: 5, loot: null },
+            'wolf': { name: "Árnyfarkas", hp: 80, maxHp: 80, atk: 10, xp: 35, gold: 15, loot: 'wolf_pelt' },
+            'bandit': { name: "Bandita", hp: 120, maxHp: 120, atk: 15, xp: 60, gold: 40, loot: 'potion' },
+            'golem': { name: "Kristály Gólem", hp: 400, maxHp: 400, atk: 30, xp: 500, gold: 200, loot: 'crystal_shard' }
         };
 
         const QUESTS = {
-            'golem': { title: "Gólem Vadász", desc: "Győzd le a Kristály Gólemet a barlang mélyén!", reward: "Dicsőség" }
+            'golem': { title: "Gólem Vadász", desc: "Győzd le a Kristály Gólemet a barlang mélyén!", reward: "Dicsőség" },
+            'merchant': { title: "Eltűnt Szállítmány", desc: "A kereskedő áruját elrabolták a banditák az erdőben. Szerezd vissza!", reward: "100 Gold" }
         };
 
+        // --- STATE ---
         // --- STATE ---
         let game = {
             heroName: "Kael",
@@ -909,7 +911,7 @@
                 { name: "Hős", class: 'warrior', lvl: 1, hp: 100, maxHp: 100, mp: 20, maxMp: 20, xp: 0, nextXp: 100, stats: { str: 10, int: 5 } }
             ],
             quests: [], // Array of QUEST IDs
-            flags: { tutorialDone: false, guildJoined: false },
+            flags: { tutorialDone: false, guildJoined: false, elaraRecruited: false, merchantQuestStarted: false, merchantQuestDone: false },
             unlockedLocs: ['forest']
         };
 
@@ -1186,7 +1188,10 @@
         }
 
         function winCombat() {
-            showNotification(`GYŐZELEM! +${combat.enemy.xp} XP`);
+            const goldReward = combat.enemy.gold || 0;
+            game.gold += goldReward;
+
+            showNotification(`GYŐZELEM! +${combat.enemy.xp} XP, +${goldReward} G`);
             // Loot
             if (combat.enemy.loot) addItem(combat.enemy.loot);
 
@@ -1202,6 +1207,7 @@
             const next = combat.winScene;
             combat = null;
             renderParty();
+            renderHuds(); // Update gold display
             loadScene(next);
         }
 
@@ -1429,7 +1435,32 @@
                 text: "Az erdő mélyén vagy. Madarak csicseregnek, de veszélyt érzel.",
                 choices: [
                     { text: "Körülnézek (Harc)", action: () => startCombat('slime', 'forest_main') },
-                    { text: "Irány a Város!", next: 'city_gates', action: () => { if (!game.unlockedLocs.includes('city')) game.unlockedLocs.push('city'); } }
+                    { text: "Irány a Város!", next: 'city_gates', action: () => { if (!game.unlockedLocs.includes('city')) game.unlockedLocs.push('city'); } },
+                    { text: "Nyomok követése (Küldetés)", next: 'forest_clearing', cond: () => game.flags.merchantQuestStarted && !game.flags.merchantQuestDone }
+                ]
+            },
+            forest_clearing: {
+                img: 'images/forest.png',
+                locName: "Erdei Tisztás",
+                text: "Egy rejtett tisztásra értél. Banditák táboroznak itt, és látsz egy szekeret, ami a kereskedőé lehet.",
+                choices: [
+                    { text: "Támadás a Banditákra!", action: () => startCombat('bandit', 'bandit_camp_win') },
+                    { text: "Visszalopózás", next: 'forest_main' }
+                ]
+            },
+            bandit_camp_win: {
+                img: 'images/forest.png',
+                text: "A banditák elmenekültek! Megtaláltad az ellopott árut.",
+                choices: [
+                    {
+                        text: "Áru felvétele",
+                        action: () => {
+                            game.flags.merchantQuestDone = true;
+                            addItem('potion', 2); // Extra loot
+                            showNotification("Áru visszaszerezve! +2 Gyógyital");
+                            loadScene('forest_main');
+                        }
+                    }
                 ]
             },
             city_gates: {
@@ -1438,7 +1469,8 @@
                 text: "A dicsőséges város. Piacok, Guild, Kovács... minden itt van.",
                 choices: [
                     { text: "Kalandorok Céhe", next: 'guild' },
-                    { text: "Piactér (Bolt)", next: 'shop' }
+                    { text: "Piactér (Bolt)", next: 'shop' },
+                    { text: "Vissza az Erdőbe", next: 'forest_main' }
                 ]
             },
             guild: {
@@ -1447,10 +1479,14 @@
                 text: "A Guild Mester rád néz. 'Van itt egy papnő, Elara, aki társat keres.'",
                 choices: [
                     {
-                        text: "Elara felvétele a csapatba", cond: () => game.party.length === 1, action: () => {
+                        text: "Elara felvétele a csapatba",
+                        cond: () => !game.flags.elaraRecruited,
+                        action: () => {
                             game.party.push({ name: "Elara", class: 'mage', lvl: 1, hp: 80, maxHp: 80, mp: 100, maxMp: 100, xp: 0, nextXp: 100, stats: { str: 3, int: 15 } });
+                            game.flags.elaraRecruited = true;
                             showNotification("Elara csatlakozott!");
                             renderParty();
+                            loadScene('guild');
                         }
                     },
                     {
@@ -1459,6 +1495,7 @@
                             game.unlockedLocs.push('dungeon');
                             showNotification("Új küldetés: [Gólem Vadász]");
                             renderHuds(); // Update quest log
+                            loadScene('guild');
                         }
                     },
                     { text: "Vissza a városba", next: 'city_gates' }
@@ -1469,9 +1506,42 @@
                 locName: "Vegyesbolt",
                 text: "A kereskedő mosolyog. 'Vegyél valamit!'",
                 choices: [
+                    {
+                        text: "Beszéd a Kereskedővel (Küldetés)",
+                        cond: () => !game.flags.merchantQuestStarted,
+                        next: 'shop_talk'
+                    },
+                    {
+                        text: "Küldetés Leadása",
+                        cond: () => game.flags.merchantQuestDone && game.quests.includes('merchant'),
+                        action: () => {
+                            game.gold += 100;
+                            game.quests = game.quests.filter(q => q !== 'merchant'); // Remove active quest
+                            showNotification("Küldetés Kész! +100 Gold");
+                            renderHuds();
+                            loadScene('shop');
+                        }
+                    },
                     { text: "Vaskard vásárlása (100g)", action: () => { if (game.gold >= 100) { game.gold -= 100; addItem('sword_iron'); } else showNotification("Nincs pénz!"); } },
                     { text: "Gyógyital (20g)", action: () => { if (game.gold >= 20) { game.gold -= 20; addItem('potion'); } else showNotification("Nincs pénz!"); } },
                     { text: "Vissza", next: 'city_gates' }
+                ]
+            },
+            shop_talk: {
+                img: 'images/shop_interior.png',
+                text: "A kereskedő sóhajt. 'A banditák kirabolták a szekerem az erdőben. Ha visszaszerzed, 100 aranyat fizetek!'",
+                choices: [
+                    {
+                        text: "Elvállalom!",
+                        action: () => {
+                            game.flags.merchantQuestStarted = true;
+                            game.quests.push('merchant');
+                            showNotification("Új küldetés: [Eltűnt Szállítmány]");
+                            renderHuds();
+                            loadScene('shop');
+                        }
+                    },
+                    { text: "Nem érdekel", next: 'shop' }
                 ]
             },
             dungeon_entry: {
