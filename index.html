@@ -737,7 +737,7 @@
 
     <!-- START SCREEN OVERLAY -->
     <div id="start-screen"
-        style="position:fixed; top:0; left:0; width:100%; height:100%; background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.9)), url('images/city.png'); background-size: cover; background-position: center; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center; padding: 20px;">
+        style="position:fixed; top:0; left:0; width:100%; min-height:100dvh; background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.9)), url('images/city.png'); background-size: cover; background-position: center; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center; padding: 20px; box-sizing: border-box;">
 
         <h1
             style="color:var(--accent-color); font-size:calc(2.2rem + 1.5vw); margin-bottom:10px; text-align:center; text-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 10px var(--accent-color); line-height: 1.1;">
@@ -1452,7 +1452,6 @@
                 choices: [
                     { text: "Körülnézek (Harc)", action: () => startCombat('slime', 'forest_main') },
                     { text: "Irány a Város!", next: 'city_gates', action: () => { if (!game.unlockedLocs.includes('city')) game.unlockedLocs.push('city'); } },
-                    { text: "Irány a Kristály Barlang", next: 'dungeon_entry' },
                     { text: "Irány az Árnyék Romok", next: 'ruins_entry', cond: () => game.unlockedLocs.includes('ruins') },
                     { text: "Nyomok követése (Küldetés)", next: 'forest_clearing', cond: () => game.flags.merchantQuestStarted && !game.flags.merchantQuestDone }
                 ]
