@@ -277,7 +277,7 @@
         #world-map-grid {
             display: grid;
             grid-template-areas:
-                ". . . dungeon ."
+                "ruins . . dungeon ."
                 ". . forest . ."
                 "city . . . ."
                 ". . field . ."
@@ -822,6 +822,7 @@
                 <div class="map-node" style="grid-area: dungeon;" onclick="travelTo('dungeon')">Kristály<br>Barlang
                 </div>
                 <div class="map-node" style="grid-area: field;" onclick="travelTo('field')">Arany<br>Mezők</div>
+                <div class="map-node" style="grid-area: ruins;" onclick="travelTo('ruins')">Árnyék<br>Romok</div>
             </div>
         </div>
     </div>
@@ -880,18 +881,31 @@
             'staff_wood': { name: "Fa Bot", icon: "🪵", type: 'weapon', slot: 'mainhand', atk: 3, matk: 8, price: 50, rarity: 'common' },
             'leather_armor': { name: "Bőrpáncél", icon: "🛡️", type: 'armor', slot: 'armor', def: 5, price: 80, rarity: 'common' },
             'wolf_pelt': { name: "Farkasbőr", icon: "🧶", type: 'material', price: 15, rarity: 'common' },
-            'crystal_shard': { name: "Kristály", icon: "💎", type: 'material', price: 50, rarity: 'rare' }
+            'crystal_shard': { name: "Kristály", icon: "💎", type: 'material', price: 50, rarity: 'rare' },
+            'herb': { name: "Gyógynövény", icon: "🌿", type: 'material', price: 5, rarity: 'common' },
+            'iron_ore': { name: "Vasérc", icon: "⛏️", type: 'material', price: 30, rarity: 'uncommon' },
+            'magic_wood': { name: "Varázsfa", icon: "🪄", type: 'material', price: 80, rarity: 'rare' },
+            'iron_shield': { name: "Vaspajzs", icon: "🛡️", type: 'armor', slot: 'offhand', def: 8, price: 150, rarity: 'uncommon' },
+            'magic_staff': { name: "Varázsbot", icon: "🔮", type: 'weapon', slot: 'mainhand', atk: 5, matk: 15, price: 300, rarity: 'rare' },
+            'wood': { name: "Fa", icon: "🪵", type: 'material', price: 2, rarity: 'common' },
+            'ancient_relic': { name: "Ősi Ereklye", icon: "🏺", type: 'material', price: 500, rarity: 'epic' }
         };
 
         const RECIPES = [
-            { result: 'leather_armor', req: { 'wolf_pelt': 3 }, cost: 50 }
+            { result: 'leather_armor', req: { 'wolf_pelt': 3 }, cost: 50 },
+            { result: 'potion', req: { 'herb': 2 }, cost: 10 },
+            { result: 'mana_potion', req: { 'herb': 1, 'crystal_shard': 1 }, cost: 15 },
+            { result: 'iron_shield', req: { 'iron_ore': 5, 'wood': 2 }, cost: 100 },
+            { result: 'sword_iron', req: { 'iron_ore': 4, 'wood': 2 }, cost: 80 },
+            { result: 'magic_staff', req: { 'staff_wood': 1, 'magic_wood': 2, 'crystal_shard': 1 }, cost: 200 }
         ];
 
         const ENEMIES = {
-            'slime': { name: "Nyálkaszörny", hp: 40, maxHp: 40, atk: 5, xp: 15, gold: 5, loot: null },
+            'slime': { name: "Nyálkaszörny", hp: 40, maxHp: 40, atk: 5, xp: 15, gold: 5, loot: 'herb' },
             'wolf': { name: "Árnyfarkas", hp: 80, maxHp: 80, atk: 10, xp: 35, gold: 15, loot: 'wolf_pelt' },
             'bandit': { name: "Bandita", hp: 120, maxHp: 120, atk: 15, xp: 60, gold: 40, loot: 'potion' },
-            'golem': { name: "Kristály Gólem", hp: 400, maxHp: 400, atk: 30, xp: 500, gold: 200, loot: 'crystal_shard' }
+            'golem': { name: "Kristály Gólem", hp: 400, maxHp: 400, atk: 30, xp: 500, gold: 200, loot: 'iron_ore' },
+            'shadow_knight': { name: "Árnylovag", hp: 600, maxHp: 600, atk: 40, xp: 1000, gold: 500, loot: 'ancient_relic' }
         };
 
         const QUESTS = {
@@ -1412,7 +1426,9 @@
             if (loc === 'city') loadScene('city_gates');
             if (loc === 'forest') loadScene('forest_main');
             if (loc === 'dungeon') loadScene('dungeon_entry');
+            if (loc === 'dungeon') loadScene('dungeon_entry');
             if (loc === 'field') loadScene('forest_main'); // Placeholder
+            if (loc === 'ruins') loadScene('ruins_entry');
 
             showNotification(`Megérkeztél: ${loc.toUpperCase()}`);
         }
@@ -1436,6 +1452,8 @@
                 choices: [
                     { text: "Körülnézek (Harc)", action: () => startCombat('slime', 'forest_main') },
                     { text: "Irány a Város!", next: 'city_gates', action: () => { if (!game.unlockedLocs.includes('city')) game.unlockedLocs.push('city'); } },
+                    { text: "Irány a Kristály Barlang", next: 'dungeon_entry' },
+                    { text: "Irány az Árnyék Romok", next: 'ruins_entry', cond: () => game.unlockedLocs.includes('ruins') },
                     { text: "Nyomok követése (Küldetés)", next: 'forest_clearing', cond: () => game.flags.merchantQuestStarted && !game.flags.merchantQuestDone }
                 ]
             },
@@ -1469,6 +1487,7 @@
                 text: "A dicsőséges város. Piacok, Guild, Kovács... minden itt van.",
                 choices: [
                     { text: "Kalandorok Céhe", next: 'guild' },
+                    { text: "Kocsma (ÚJ!)", next: 'tavern' },
                     { text: "Piactér (Bolt)", next: 'shop' },
                     { text: "Vissza az Erdőbe", next: 'forest_main' }
                 ]
@@ -1562,8 +1581,67 @@
             },
             win_game: {
                 img: 'images/city.png',
-                text: "LEGYŐZTED A GÓLEMET! Aethelgard hőse vagy! Vége a jelenlegi tartalomnak.",
-                choices: [{ text: "Újrakezdés", action: () => location.reload() }]
+                text: "LEGYŐZTED A GÓLEMET! Aethelgard hőse vagy! A város ünnepel.",
+                choices: [{ text: "Vissza a városba", next: 'city_gates' }]
+            },
+            tavern: {
+                img: 'images/tavern_interior_1770063630071.png',
+                locName: "Fekete Macska Kocsma",
+                text: "A kocsma zsúfolt és meleg. A sarokban egy öregember pipázik, és furcsa meséket mond.",
+                choices: [
+                    { text: "Beszélek az öreggel", next: 'tavern_oldman' },
+                    { text: "Veszek egy sört (5g)", action: () => { game.gold >= 5 ? (game.gold -= 5, showNotification("Finom hideg sör!")) : showNotification("Nincs pénz!"); } },
+                    { text: "Vissza a városba", next: 'city_gates' }
+                ]
+            },
+            tavern_oldman: {
+                img: 'images/tavern_interior_1770063630071.png',
+                text: "Az öreg rád néz. 'Hallottál már az Ősi Romokról? Azt mondják egy Árnylovag őrzi ott az istenek kincsét... De senki nem tért még vissza.'",
+                choices: [
+                    {
+                        text: "Megkeresem a Romokat!",
+                        action: () => {
+                            if (!game.unlockedLocs.includes('ruins')) {
+                                game.unlockedLocs.push('ruins');
+                                showNotification("Új helyszín: Árnyék Romok!");
+                            }
+                            loadScene('city_gates'); // Return to city to travel
+                        }
+                    },
+                    { text: "Hagyj békén, öreg.", next: 'tavern' }
+                ]
+            },
+            ruins_entry: {
+                img: 'images/ancient_ruins_1770063647994.png',
+                locName: "Árnyék Romok",
+                text: "A levegő hideg és nehéz. A romok között baljós csend honol.",
+                choices: [
+                    { text: "Bemegyek a közepére", next: 'ruins_boss' },
+                    { text: "Vissza a térképre", action: () => toggleOverlay('map') },
+                    { text: "Vissza az Erdőbe", next: 'forest_main' }
+                ]
+            },
+            ruins_boss: {
+                img: 'images/shadow_knight_boss_1770063665115.png',
+                text: "Egy hatalmas fekete páncélos lovag lép elő a sötétből. Szemei vörösen izzanak.",
+                choices: [
+                    { text: "HARC!", action: () => startCombat('shadow_knight', 'win_ruins') },
+                    { text: "Menekülés!", action: () => { showNotification("Elfutsz..."); loadScene('ruins_entry'); } }
+                ]
+            },
+            win_ruins: {
+                img: 'images/ancient_ruins_1770063647994.png',
+                text: "Legyőzted az Árnylovagot! Megtaláltad az ősi ereklyét. Ez a történet vége... egyelőre.",
+                choices: [
+                    {
+                        text: "Ereklye elvétele",
+                        action: () => {
+                            addItem('ancient_relic');
+                            showNotification("Megszerezted: Ősi Ereklye!");
+                            loadScene('city_gates');
+                        }
+                    }
+                ]
             }
         };
 
