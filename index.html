@@ -713,6 +713,17 @@
             border-bottom: 2px solid #555;
             padding-bottom: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 600px) {
+            .tab-btn {
+                font-size: 1rem !important;
+                padding: 5px !important;
+                flex: 1;
+                text-align: center;
+                white-space: nowrap;
+            }
         }
 
         .tab-btn {
@@ -1087,6 +1098,16 @@
             addItem(recipe.result);
             showNotification(`Sikeresen elkészült: ${ITEMS[recipe.result].name}`);
             renderHuds();
+        }
+
+        function gatherMaterials() {
+            // Simple RNG gathering
+            const roll = Math.random();
+            let itemKey = 'wood';
+            if (roll > 0.6) itemKey = 'herb'; // 40% chance for herb
+
+            addItem(itemKey, 1);
+            showNotification(`Találtál: ${ITEMS[itemKey].name}`);
         }
 
         // --- COMBAT SYSTEM 2.0 ---
@@ -1491,6 +1512,7 @@
                 text: "Az erdő mélyén vagy. Madarak csicseregnek, de veszélyt érzel.",
                 choices: [
                     { text: "Körülnézek (Harc)", action: () => startCombat('slime', 'forest_main') },
+                    { text: "Gyűjtögetés (Alapanyag)", action: () => gatherMaterials() },
                     { text: "Irány a Város!", next: 'city_gates', action: () => { if (!game.unlockedLocs.includes('city')) game.unlockedLocs.push('city'); } },
                     { text: "Irány az Árnyék Romok", next: 'ruins_entry', cond: () => game.unlockedLocs.includes('ruins') },
                     { text: "Nyomok követése (Küldetés)", next: 'forest_clearing', cond: () => game.flags.merchantQuestStarted && !game.flags.merchantQuestDone }
