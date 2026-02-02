@@ -937,7 +937,7 @@
         ];
 
         const ENEMIES = {
-            'slime': { name: "Nyálkaszörny", hp: 40, maxHp: 40, atk: 5, xp: 15, gold: 5, loot: 'herb' },
+            'slime': { name: "Nyálkaszörny", hp: 40, maxHp: 40, atk: 5, xp: 15, gold: 5, loot: 'herb', img: 'images/slime.png' },
             'wolf': { name: "Árnyfarkas", hp: 80, maxHp: 80, atk: 10, xp: 35, gold: 15, loot: 'wolf_pelt' },
             'bandit': { name: "Bandita", hp: 120, maxHp: 120, atk: 15, xp: 60, gold: 40, loot: 'potion' },
             'golem': { name: "Kristály Gólem", hp: 400, maxHp: 400, atk: 30, xp: 500, gold: 200, loot: 'iron_ore' },
@@ -1099,6 +1099,10 @@
                 turn: 0, // 0 = Player 1, 1 = Player 2..., X = Enemy
                 logs: []
             };
+
+            if (template.img) {
+                document.getElementById('scene-img').src = template.img;
+            }
 
             document.getElementById('combat-hud').style.display = 'block';
             updateCombatView();
